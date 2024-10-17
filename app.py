@@ -75,6 +75,20 @@ def make_request(url, payload, authorization):
         print(f"Error during request: {e}")
         return None
 
+def make_get_request(url, authorization):
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "authorization": authorization,
+        "content-type": "application/json",
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json() if response.status_code == 200 else None
+    except requests.RequestException as e:
+        print(f"Error during request: {e}")
+        return None
+
 
 # Flask route to start tracking a shop
 @app.route('/api/start_tracking', methods=['POST'])
@@ -233,6 +247,21 @@ def api_get_all_store_data():
         "products_data": products_data
     }), 200
 
+
+# Fetch route to get Data of Top Performaning Stores
+@app.route('/api/get_top_performing_stores', methods=['GET'])
+def api_get_top_performing_stores():
+    authorization = get_authorization()
+    if not authorization:
+        return jsonify({"error": "Authorization failed"}), 401
+
+    url = "https://app.shophunter.io/prod/a/stores/top"
+
+    result = make_get_request(url, authorization)
+
+    if result:
+        return jsonify(result), 200
+    return jsonify({"error": "Failed to get top performing stores"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
